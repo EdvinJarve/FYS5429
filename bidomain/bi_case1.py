@@ -9,6 +9,7 @@ import ufl
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils.heart_solver_fem import BidomainSolverFEM
 from utils.heart_solver_pinns import BidomainSolverPINNs
+from matplotlib.ticker import ScalarFormatter
 
 device = 'cpu'
 
@@ -203,24 +204,18 @@ plt.tight_layout()
 plt.savefig(f"bidomain_results/analytical_comparison_u_e_at_T={t_final}.pdf")
 plt.close()
 
-# Plot the error over time for FEM
+# Plot the MSE over time for FEM
 plt.figure(figsize=(7, 5))
-plt.plot(np.linspace(0, T, len(errors_fem_v)), errors_fem_v, label="v")
-plt.plot(np.linspace(0, T, len(errors_fem_u_e)), errors_fem_u_e, label="u_e")
-plt.xlabel("Time (s)")
+plt.plot(np.linspace(0, T, len(errors_fem_v)), errors_fem_v, label="FEM $v$")
+plt.plot(np.linspace(0, 1, len(errors_pinns_v)), errors_pinns_v, label="PINNs $v$")
+plt.plot(np.linspace(0, T, len(errors_fem_u_e)), errors_fem_u_e, label="FEM $u_e$")
+plt.plot(np.linspace(0, 1, len(errors_pinns_u_e)), errors_pinns_u_e, label="PINNs $u_e$")
+plt.xlabel("Time")
 plt.ylabel("Error")
-plt.title("FEM Error over Time")
+plt.title("MSE over time Bidomain")
+ax = plt.gca()  # Get current axis
+ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
 plt.legend()
-plt.savefig(f"bidomain_results/bi_analytical_fem_error_over_time.pdf")
-plt.close()
-
-# Plot the error over time for PINNs
-plt.figure(figsize=(7, 5))
-plt.plot(np.linspace(0, 1, len(errors_pinns_v)), errors_pinns_v, label="v")
-plt.plot(np.linspace(0, 1, len(errors_pinns_u_e)), errors_pinns_u_e, label="u_e")
-plt.xlabel("Time (s)")
-plt.ylabel("Error")
-plt.title("PINNs Error over Time")
-plt.legend()
-plt.savefig(f"bidomain_results/bi_analytical_pinns_error_over_time.pdf")
+plt.savefig(f"bidomain_results/bi_ue_mse_over_time.pdf")
 plt.close()

@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from dolfinx import fem, mesh
 import torch
 import ufl
+from matplotlib.ticker import ScalarFormatter
+
 
 # Add the project root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -46,7 +48,7 @@ start_time_fem = time.time()
 # Initialize and run the FEM simulation
 sim_fem = MonodomainSolverFEM(Nx, Ny, T, stimulus_expression, M, dt)
 
-errors_fem, computation_time_fem = sim_fem.run(analytical_solution_v=analytical_solution_v)
+mse_fem, computation_time_fem = sim_fem.run(analytical_solution_v=analytical_solution_v)
 
 end_time_fem = time.time()
 print(f"Simulation complete in {end_time_fem - start_time_fem:.2f} seconds\n")
@@ -124,7 +126,7 @@ x_flat = x_grid.flatten()
 y_flat = y_grid.flatten()
 
 # Initialize list to store errors
-errors_pinns = []
+mse_pinns = []
 
 # Create a meshgrid for contour plotting
 X, Y = np.meshgrid(np.linspace(0, 1, Nx), np.linspace(0, 1, Ny))
@@ -150,7 +152,7 @@ for t in np.linspace(0, 1, Nt):
     
     # Calculate and store error
     error = np.linalg.norm(predictions - analytical_solution_values) / len(predictions.flatten())
-    errors_pinns.append(error)
+    mse_pinns.append(error)
 
 # Plot numerical and analytical solutions at final time for both PINNs and FEM
 fig, axes = plt.subplots(1, 2, figsize=(11, 6))
@@ -185,22 +187,20 @@ plt.tight_layout()
 plt.savefig(f"monodomain_results/analytical_comparison_at_T={t_final}.pdf")
 plt.close()
 
-# Plot the error over time for FEM
-plt.figure(figsize=(7, 5))
-plt.plot(np.linspace(0, T, len(errors_fem)), errors_fem)
-plt.xlabel("Time (s)")
-plt.ylabel("Error")
-plt.title("FEM Error over Time")
-plt.savefig(f"monodomain_results/mono_analytical_fem_error_over_time.pdf")
-plt.close()
+
 
 # Plot the error over time for PINNs
 plt.figure(figsize=(7, 5))
-plt.plot(np.linspace(0, 1, len(errors_pinns)), errors_pinns)
+plt.plot(np.linspace(0, T, len(mse_fem)), mse_fem, label = "FEM")
+plt.plot(np.linspace(0, 1, len(mse_pinns)), mse_pinns, label = "PINNs")
 plt.xlabel("Time (s)")
 plt.ylabel("Error")
-plt.title("PINNs Error over Time")
-plt.savefig(f"monodomain_results/mono_analytical_pinns_error_over_time.pdf")
+plt.title("MSE over Time")
+ax = plt.gca()  # Get current axis
+ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+plt.legend()
+plt.savefig(f"monodomain_results/mono_analytical_mse_over_time.pdf")
 plt.close()
 
 """
